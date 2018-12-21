@@ -1,0 +1,7 @@
+﻿  keyInstance.cpp
+c:\twofish\keyinstance.cpp(36): warning C4267: аргумент: преобразование из "size_t" в "twofish::DWORD"; возможна потеря данных
+c:\twofish\keyinstance.cpp(37): warning C4267: аргумент: преобразование из "size_t" в "twofish::DWORD"; возможна потеря данных
+  main.cpp
+  twofish.cpp
+  Создание кода...
+  twofish.vcxproj -> C:\twofish\vs17\twofish\x64\Debug\twofish.exe
