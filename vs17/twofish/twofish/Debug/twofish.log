@@ -1,6 +1,0 @@
-﻿  keyInstance.cpp
-c:\twofish\keyinstance.cpp(34): warning C4018: <: несоответствие типов со знаком и без знака
-  main.cpp
-  twofish.cpp
-  Создание кода...
-  twofish.vcxproj -> C:\twofish\vs17\twofish\Debug\twofish.exe
