@@ -97,7 +97,7 @@ size_t file_size(const char* filename){
     fclose(file);
     return textSize;
 }
-template<typename TYPE>
+
 int TestFileTwoFish_CBC(const char* type, int keySize){
     DWORD key32[8]{};
     char name[1024];
@@ -121,18 +121,18 @@ int TestFileTwoFish_CBC(const char* type, int keySize){
 
     /* encrypt the bytes */
     std::cerr<<"START ENCRYPT. FILE:   "<<name<<std::endl;
-    TYPE ci;
+    Twofish_CBC ci;
     BYTE iv[BLOCK_SIZE / 8]{};
-    if(typeof (ci)){
-        sprintf(name, "%s""iv.txt", directory);
-        file = fopen(name, "rb");
-        if (file == nullptr){
-            return 1;
-        }
-        fread(iv, IV_SIZE, 1, file);	/* select key bits */
-        fclose(file);
-        ci.addIv(iv,IV_SIZE);
+
+    sprintf(name, "%s""iv.txt", directory);
+    file = fopen(name, "rb");
+    if (file == nullptr){
+        return 1;
     }
+    fread(iv, IV_SIZE, 1, file);	/* select key bits */
+    fclose(file);
+    ci.addIv(iv,IV_SIZE);
+
     BYTE *encrypted = new BYTE[textSize];
     if (ci.encrypt(ki, plain, textSize, encrypted) != textSize){
         return 1;
