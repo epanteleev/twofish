@@ -33,8 +33,8 @@ TEST_F(TwofishTest_ECB,test1){
     const DWORD a[4] = {0x1,0x1,0x1,0x1};
     setKey(a,128);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size()*8, (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size()*8, (unsigned char*)res);
+    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
+    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
     ASSERT_EQ(str,(const char*)res);
     ASSERT_NE(str,(const char*)arr);
 }
@@ -44,8 +44,8 @@ TEST_F(TwofishTest_ECB,test2){
     const DWORD a[4] = {0x1,0x2,0x2,0xff};
     setKey(a,128);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size()*8, (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size()*8, (unsigned char*)res);
+    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
+    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
     ASSERT_EQ(str,(const char*)res);
     ASSERT_NE(str,(const char*)arr);
 }
@@ -55,8 +55,8 @@ TEST_F(TwofishTest_ECB,test3){
     const DWORD a[4] = {0x1,0x2,0x2,0xff};
     setKey(a,128);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size()*8, (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size()*8, (unsigned char*)res);
+    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
+    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
     ASSERT_EQ(str,(const char*)res);
     ASSERT_NE(str,(const char*)arr);
 }
@@ -65,8 +65,8 @@ TEST_F(TwofishTest_ECB,test4){
     const DWORD a[4] = {0x1,0x2,0x2,0xff};
     setKey(a,128);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size()*8, (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size()*8, (unsigned char*)res);
+    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
+    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
     ASSERT_EQ(str,(const char*)res);
     ASSERT_NE(str,(const char*)arr);
 }
@@ -84,8 +84,8 @@ TEST_F(TwofishTest_ECB,test6){
     const DWORD a[6] = {0x1,0x2,0x2,0xff,0xDF,0xFD};
     setKey(a,192);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size()*8, (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size()*8, (unsigned char*)res);
+    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
+    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
     ASSERT_EQ(str,(const char*)res);
     ASSERT_NE(str,(const char*)arr);
 }
@@ -94,7 +94,7 @@ TEST_F(TwofishTest_ECB,test6){
 class TwofishTest_CBC : public TwofishTestBase<Twofish_CBC>{
 protected:
     virtual void iv_set(BYTE* iv){
-        ecb.addIv(iv);
+        ecb.addIv(iv,IV_SIZE);
     }
 };
 
@@ -106,9 +106,9 @@ TEST_F(TwofishTest_CBC,test1){
     setKey(a,128);
     iv_set(iv);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size()*8, arr);
+    encrypt((const BYTE*)str.c_str(), str.size(), arr);
     iv_set(iv);
-    decrypt( (const BYTE*)arr, str.size()*8, res);
+    decrypt( (const BYTE*)arr, str.size(), res);
     ASSERT_EQ(str,(const char*)res);
     ASSERT_NE(str,(const char*)arr);
 }
@@ -121,9 +121,9 @@ TEST_F(TwofishTest_CBC,test2){
     setKey(a,128);
     iv_set(iv);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size()*8, arr);
+    encrypt((const BYTE*)str.c_str(), str.size(), arr);
     iv_set(iv);
-    decrypt( (const BYTE*)arr, str.size()*8, res);
+    decrypt( (const BYTE*)arr, str.size(), res);
     ASSERT_EQ(str,(const char*)res);
     ASSERT_NE(str,(const char*)arr);
 }
@@ -136,9 +136,9 @@ TEST_F(TwofishTest_CBC,test3){
     setKey(a,128);
     iv_set(iv);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size()*8, arr);
+    encrypt((const BYTE*)str.c_str(), str.size(), arr);
     iv_set(iv);
-    decrypt( (const BYTE*)arr, str.size()*8, res);
+    decrypt( (const BYTE*)arr, str.size(), res);
     ASSERT_EQ(str,(const char*)res);
     ASSERT_NE(str,(const char*)arr);
 }

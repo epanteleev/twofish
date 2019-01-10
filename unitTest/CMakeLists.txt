@@ -35,6 +35,7 @@ endif()
 include_directories("../" )
 # Now simply link against gtest or gtest_main as needed. Eg
 add_executable(unitTest_1 ${TESTS_FILE})
-target_link_libraries(unitTest_1  libtwofish gtest_main)
+add_dependencies(unitTest_1 ${PROJECT_NAME})
+target_link_libraries(unitTest_1  ${PROJECT_NAME} gtest_main)
 add_test(ALLTests unitTest COMMAND unitTest_1)
 

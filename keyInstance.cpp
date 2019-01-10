@@ -15,6 +15,7 @@ DWORD keyInstance::RS_MDS_Encode(DWORD k0,DWORD k1){
 }
 
 bool keyInstance::reKey(){
+    using namespace internal;
     int		i,k64Cnt;
     size_t 	subkeyCnt = ROUND_SUBKEYS + 2 * NUM_ROUNDS;
     DWORD	A,B;

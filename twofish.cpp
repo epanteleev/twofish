@@ -3,7 +3,8 @@
 
 namespace twofish {
 
-DWORD f32(DWORD x,const DWORD *k32,int keyLen){
+namespace internal{
+DWORD f32(DWORD x,const DWORD *k32,size_t keyLen){
     using namespace table;
 	BYTE  b[4]{};
     /* Run each byte thru 8x8 S-boxes, xoring with key byte at each stage. */
@@ -35,7 +36,9 @@ DWORD f32(DWORD x,const DWORD *k32,int keyLen){
             ((M20(b[0]) ^ M21(b[1]) ^ M22(b[2]) ^ M23(b[3])) << 16) ^
             ((M30(b[0]) ^ M31(b[1]) ^ M32(b[2]) ^ M33(b[3])) << 24) ;
 }
+}
 
+using namespace internal;
 int blockEncrypt(keyInstance& key, DWORD* x){
     DWORD t0,t1, tmp;
     for (int r = 0;r < NUM_ROUNDS;r++){			/* main Twofish encryption loop */
@@ -83,6 +86,7 @@ int Twofish_ECB::encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BY
     if(input == nullptr || inputLen <= 0){
         throw bad_input_buffer();
     }
+    inputLen *= 8;
     if(outBuffer == nullptr){
         throw bad_output_buffer();
     }
@@ -96,7 +100,7 @@ int Twofish_ECB::encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BY
             reinterpret_cast<DWORD *>(outBuffer)[i] = Bswap(x[i] ^ key.subKey()[OUTPUT_WHITEN+i]);
         }
     }
-    return inputLen;
+    return inputLen/8;
 }
 int Twofish_ECB::decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer){
     if(input == nullptr || inputLen <= 0){
@@ -112,24 +116,28 @@ int Twofish_ECB::decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BY
     if(outBuffer == nullptr){
         throw bad_output_buffer();
     }
+    inputLen *= 8;
     for (size_t n = 0;n<inputLen;n+=BLOCK_SIZE,input+=BLOCK_SIZE/8,outBuffer+=BLOCK_SIZE/8){
         for (size_t i=0;i<BLOCK_SIZE/32;i++){	/* copy in the block, add whitening */
-            x[i] = Bswap(reinterpret_cast<const DWORD *>(input)[i]) ^ key.subKey()[OUTPUT_WHITEN+i];
+            x[i] = internal::Bswap(reinterpret_cast<const DWORD *>(input)[i]) ^ key.subKey()[OUTPUT_WHITEN+i];
         }
         blockDecrypt(key,x);
         for (size_t i = 0;i < BLOCK_SIZE/32 ;i++){	/* copy out, with whitening */
             x[i] ^= key.subKey()[INPUT_WHITEN + i];
-            reinterpret_cast<DWORD *>(outBuffer)[i]  = Bswap(x[i]);
+            reinterpret_cast<DWORD *>(outBuffer)[i]  = internal::Bswap(x[i]);
         }
     }
-    return inputLen;
+    return inputLen/8;
 }
 
-void Twofish_CBC::addIv(BYTE* Iv){
+void Twofish_CBC::addIv(BYTE* Iv, size_t iv_length){
     if(Iv == nullptr){
         throw bad_input_buffer();
     }
-    std::memcpy(iv32,Iv,BLOCK_SIZE/8);
+    if(iv_length != IV_SIZE){
+        throw bad_input_len();
+    }
+    std::memcpy(iv32,Iv,IV_SIZE);
 }
 
 int Twofish_CBC::encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer){
@@ -142,6 +150,7 @@ int Twofish_CBC::encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BY
     if(outBuffer == nullptr){
         throw bad_output_buffer();
     }
+    inputLen *= 8;
     DWORD x[BLOCK_SIZE / 32]{};			/* block being encrypted */
     for (size_t n = 0; n < inputLen;n+=BLOCK_SIZE,input+=BLOCK_SIZE/8,outBuffer+=BLOCK_SIZE/8){
         for (int i = 0;i<BLOCK_SIZE/32;i++)	/* copy in the block, add whitening */{
@@ -151,10 +160,10 @@ int Twofish_CBC::encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BY
         blockEncrypt(key,x);
         for (size_t i = 0;i<BLOCK_SIZE/32;i++)	/* copy out, with whitening */{
             reinterpret_cast<DWORD *>(outBuffer)[i] = Bswap(x[i] ^ key.subKey()[OUTPUT_WHITEN+i]);
-            iv32[i] = ((DWORD *)outBuffer)[i];
+            iv32[i] = reinterpret_cast<DWORD *>(outBuffer)[i];
         }
     }
-    return inputLen;
+    return inputLen/8;
 }
 
 int Twofish_CBC::decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer){
@@ -171,6 +180,7 @@ int Twofish_CBC::decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BY
     if(outBuffer == nullptr){
         throw bad_output_buffer();
     }
+    inputLen *= 8;
     for (size_t n = 0;n<inputLen;n+=BLOCK_SIZE,input+=BLOCK_SIZE/8,outBuffer+=BLOCK_SIZE/8){
         for (size_t i=0;i<BLOCK_SIZE/32;i++){	/* copy in the block, add whitening */
             x[i] = Bswap(reinterpret_cast<const DWORD *>(input)[i]) ^ key.subKey()[OUTPUT_WHITEN+i];
@@ -183,7 +193,7 @@ int Twofish_CBC::decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BY
             reinterpret_cast<DWORD *>(outBuffer)[i]  = Bswap(x[i]);
         }
     }
-    return inputLen;
+    return inputLen/8;
 }
 
 }

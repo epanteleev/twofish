@@ -12,6 +12,7 @@ const int MAX_KEY_BITS = 256;	/* max number of bits of key */
 const int MAX_KEY_SIZE = 64;	/* # of ASCII chars needed to represent a key */
 const int MAX_ROUNDS = 16;	/* max # rounds (for allocating subkey array) */
 const int BLOCK_SIZE = 128;	/* number of bits per block */
+const int IV_SIZE = 16;
 const int INPUT_WHITEN = 0;	/* subkey array indices */
 const int OUTPUT_WHITEN = ( INPUT_WHITEN + BLOCK_SIZE/32);
 const int ROUND_SUBKEYS = (OUTPUT_WHITEN + BLOCK_SIZE/32);	/* use 2 * (# rounds) */
@@ -19,57 +20,12 @@ const int TOTAL_SUBKEYS = (ROUND_SUBKEYS + 2*MAX_ROUNDS);
 const int NUM_ROUNDS = 16; /* number of rounds */
 const int MAX_IV_SIZE = 16;	/* # of bytes needed to represent an IV */
 const DWORD	ADDR_XOR = 0;		/* convert byte address in dword */
-
-class bad_key_material : public std::exception {
-    char const* what() const noexcept {
-		return "must have valid key";
-	}
-};
-class bad_cipher_mode : public std::exception {
-    const char* what() const noexcept{
-        return "params struct passed to cipherInit invalid";
-	}
-}; 
-class bad_key_mat : public std::exception {
-    const char* what() const noexcept{
-        return "key material not of correct length";
-	}
-};//BAD_KEY_INSTANCE
-class bad_key_instance : public std::exception {
-    const char* what() const noexcept{
-        return "key passed is not valid";
-	}
-};//BAD_IV_MAT
-class bad_iv_mat : public std::exception {
-    const char* what() const noexcept{
-        return "key material not of correct length";
-	}
-};//BAD_CIPHER_STATE
-class bad_cipher_state : public std::exception {
-    const char* what() const noexcept{
-        return "cipher in wrong state (e.g., not initialized)";
-    }
-};//BAD_INPUT_LEN
-
-class bad_input_len : public std::exception {
-    const char* what() const noexcept{
-        return "inputLen not a multiple of block size";
-    }
-};
-
-class bad_input_buffer : public std::exception {
-    const char* what() const noexcept{
-        return "input buffer is not valid";
-    }
-};
-class bad_output_buffer : public std::exception {
-    const char* what() const noexcept{
-        return "output buffer is not valid";
-    }
-};
 const DWORD	RS_GF_FDBK = 0x14D;		/* field generator */
 const  DWORD MDS_GF_FDBK = 0x169;	/* primitive polynomial for GF(256)*/
-DWORD f32(DWORD x,const DWORD *k32,int keyLen);
+
+namespace internal {
+
+DWORD f32(DWORD x,const DWORD *k32,size_t keyLen);
 inline DWORD Bswap(DWORD x)noexcept{
     return x;
 }
@@ -123,9 +79,59 @@ inline BYTE b1(DWORD x) { return _b(x, 1); }
 inline BYTE b2(DWORD x) { return _b(x, 2); }
 inline BYTE b3(DWORD x) { return _b(x, 3); }		/* extract MSB of DWORD */
 
+}
+
+class bad_key_material : public std::exception {
+    char const* what() const noexcept {
+        return "must have valid key";
+    }
+};
+
+class bad_cipher_mode : public std::exception {
+    const char* what() const noexcept{
+        return "params struct passed to cipherInit invalid";
+    }
+};
+
+class bad_key_mat : public std::exception {
+    const char* what() const noexcept{
+        return "key material not of correct length";
+    }
+};//BAD_KEY_INSTANCE
+class bad_key_instance : public std::exception {
+    const char* what() const noexcept{
+        return "key passed is not valid";
+    }
+};//BAD_IV_MAT
+class bad_iv_mat : public std::exception {
+    const char* what() const noexcept{
+        return "key material not of correct length";
+    }
+};//BAD_CIPHER_STATE
+class bad_cipher_state : public std::exception {
+    const char* what() const noexcept{
+        return "cipher in wrong state (e.g., not initialized)";
+    }
+};//BAD_INPUT_LEN
+
+class bad_input_len : public std::exception {
+    const char* what() const noexcept{
+        return "input length not a multiple of block size";
+    }
+};
+
+class bad_input_buffer : public std::exception {
+    const char* what() const noexcept{
+        return "input buffer is not valid";
+    }
+};
+class bad_output_buffer : public std::exception {
+    const char* what() const noexcept{
+        return "output buffer is not valid";
+    }
+};
+
 class keyInstance{
-public:
-	using len_type = size_t;
 private:
 	static const DWORD SK_STEP = 0x02020202u;
 	static const DWORD	SK_BUMP = 0x01010101u;
@@ -139,7 +145,7 @@ private:
 public:
     keyInstance() = default;
     keyInstance(const DWORD *keyMaterial_,const int keyLen_);
-	inline len_type length()const noexcept {
+    inline size_t length()const noexcept {
 		return keyLen;
     }
     void addKey(const DWORD *keyMaterial_,const int keyLen_);
@@ -166,11 +172,11 @@ private:
 		x = (x << 8) ^ (g3 << 24) ^ (g2 << 16) ^ (g3 << 8) ^ b;
 	}
 private:
-	len_type  keyLen{};					/* Length of the key */
+    size_t  keyLen{};					/* Length of the key */
     /* Twofish-specific parameters: */
     bool keySig = false;					/* set to VALID_SIG by makeKey() */
     DWORD key32[MAX_KEY_BITS / 32]{};	/* actual key bits, in dwords */
-	DWORD sboxKeys[MAX_KEY_BITS / 64]{};/* key bits used for S-boxes */
+    DWORD sboxKeys[MAX_KEY_BITS / 64]{};/* key bits used for S-boxes */
     DWORD subKeys[TOTAL_SUBKEYS]{};	/* round subkeys, input/output whitening bits */
 };
 
@@ -183,6 +189,7 @@ class twofish{
 public:
     twofish() = default;
     virtual ~twofish() = default;
+
 public:
     virtual int encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer) = 0;
     virtual int decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer) = 0;
@@ -196,7 +203,7 @@ public:
 
 class Twofish_CBC final : public twofish{
 public:
-    void addIv(BYTE* Iv);
+    void addIv(BYTE* Iv,size_t iv_length);
     int encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer)override;
     int decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer)override;
 private:
