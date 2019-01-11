@@ -105,6 +105,7 @@ void Twofish_ECB::encrypt(keyInstance& key,const BYTE *input, size_t input_lengt
         }
     }
 }
+
 void Twofish_ECB::decrypt(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer){
     verfy(key,input,input_length,outBuffer);
     DWORD x[BLOCK_SIZE/32]{};			/* block being encrypted */

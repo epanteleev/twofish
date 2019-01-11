@@ -83,7 +83,7 @@ inline int TestFileTwoFish(const char* type, int keySize){
     ci.encrypt(ki, plain, textSize, encrypted);
 
     sprintf(name, "%s""encrypt_%s_%d.txt", directory, type, keySize);
-    std::cerr << "READ ENCRYPT. FILE:   " << name << std::endl;
+    std::cerr << "READ ENCRYPT FILE"<<std::endl;
 
     BYTE *reference = read_file(name,textSize);
     assert(not memcmp(reference, encrypted, textSize));

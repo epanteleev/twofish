@@ -3,11 +3,10 @@
 using namespace twofish;
 
 DWORD keyInstance::RS_MDS_Encode(DWORD k0,DWORD k1){
-    int i,j;
     DWORD r;
-    for (i=r=0;i<2;i++){
+    for (DWORD i=r=0;i<2;i++){
         r ^= (i) ? k0 : k1;			/* merge in 32 more key bits */
-		for (j = 0; j < 4; j++) {			/* shift one byte at a time */
+        for (int j = 0; j < 4; j++) {			/* shift one byte at a time */
 			RS_rem(r);
 		}
     }
