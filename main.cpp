@@ -10,71 +10,7 @@
 
 using namespace twofish;
 
-static const char* directory = "/home/user/Development/twofish/tests/";
-
-int TestFileTwoFish(const char* type, int keySize){
-    DWORD key32[8]{};
-    char name[1024];
-    long textSize;
-    sprintf(name, "%s" "key%d.txt",directory, keySize);
-    FILE* file = fopen(name, "rb");
-    if (file == NULL)
-        return 1;
-    if (fread(key32, keySize / 8, 1, file) != 1) /* select key bits */{
-        return 1;
-    }
-    fclose(file);
-    keyInstance    ki;
-    ki.addKey(key32,keySize);
-    sprintf(name, "%s" "plain.txt",directory);
-    file = fopen(name, "rb");
-    if (file == NULL){
-        return 1;
-    }
-    fseek(file, 0, SEEK_END);
-    textSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    BYTE *plain = new BYTE[textSize];
-    BYTE *reference = new BYTE[textSize];
-    BYTE *encrypted = new BYTE[textSize];
-    BYTE *decrypted = new BYTE[textSize];
-
-    fread(plain, textSize, 1, file);
-    fclose(file);
-
-    /* encrypt the bytes */
-    std::cerr<<"START ENCRYPT. FILE:   "<<name<<std::endl;
-    Twofish_ECB ci;
-
-    if (ci.encrypt(ki, plain, textSize, encrypted) != textSize){
-        return 1;
-    }
-    sprintf(name, "%s""encrypt_%s_%d.txt", directory, type, keySize);
-    std::cerr << "READ ENCRYPT. FILE:   " << name << std::endl;
-    file = fopen(name, "rb");
-    if (file == NULL){
-        return 1;
-    }
-    fread(reference, textSize, 1, file);
-    assert(not memcmp(reference, encrypted, textSize));
-    delete[] reference;
-    fclose(file);
-
-    std::cerr<<"START DECRYPT. FILE:   "<<name<<std::endl;
-    if (ci.decrypt(ki, encrypted, textSize, decrypted) != textSize){
-        return 1;
-    }
-
-    free(encrypted);
-
-    /* make sure the decrypt output matches original plaintext */
-    assert(not memcmp(plain, decrypted, textSize));
-    delete [] plain;
-    delete [] decrypted;
-    std::cerr<<"[...TEST PASSED...]"<<std::endl;
-    return 0;					/* tests passed! */
-}
+static const char* directory = "test/";
 
 BYTE * read_file(const char* filename,size_t read_size){
     BYTE *plain = new BYTE[read_size];
@@ -97,8 +33,27 @@ size_t file_size(const char* filename){
     fclose(file);
     return textSize;
 }
+template<typename T>
+typename std::enable_if<std::is_same<Twofish_ECB,T>::value, void>::type
+    read_iv(const char* name, T& ci){
+    return;
+}
 
-int TestFileTwoFish_CBC(const char* type, int keySize){
+template<typename T>
+typename std::enable_if<std::is_same<Twofish_CBC,T>::value, void>::type
+    read_iv(const char* name, T& ci){
+    BYTE iv[BLOCK_SIZE / 8]{};
+    FILE* file = fopen(name, "rb");
+    if (file == nullptr){
+        return;
+    }
+    fread(iv, IV_SIZE, 1, file);	/* select key bits */
+    fclose(file);
+    ci.addIv(iv,IV_SIZE);
+}
+
+template<typename Type>
+inline int TestFileTwoFish(const char* type, int keySize){
     DWORD key32[8]{};
     char name[1024];
 
@@ -112,31 +67,21 @@ int TestFileTwoFish_CBC(const char* type, int keySize){
     }
     fclose(file);
     keyInstance    ki;
-    ki.addKey(key32,keySize);
+    ki.addKey(key32,keySize/32);
     sprintf(name, "%s" "plain.txt",directory);
     size_t textSize = file_size(name);
     BYTE * plain = read_file(name,textSize);
-    //BYTE *plain = (BYTE*)malloc(textSize);
-
 
     /* encrypt the bytes */
     std::cerr<<"START ENCRYPT. FILE:   "<<name<<std::endl;
-    Twofish_CBC ci;
-    BYTE iv[BLOCK_SIZE / 8]{};
+    Type ci;
 
     sprintf(name, "%s""iv.txt", directory);
-    file = fopen(name, "rb");
-    if (file == nullptr){
-        return 1;
-    }
-    fread(iv, IV_SIZE, 1, file);	/* select key bits */
-    fclose(file);
-    ci.addIv(iv,IV_SIZE);
+    read_iv(name,ci);
 
     BYTE *encrypted = new BYTE[textSize];
-    if (ci.encrypt(ki, plain, textSize, encrypted) != textSize){
-        return 1;
-    }
+    ci.encrypt(ki, plain, textSize, encrypted);
+
     sprintf(name, "%s""encrypt_%s_%d.txt", directory, type, keySize);
     std::cerr << "READ ENCRYPT. FILE:   " << name << std::endl;
 
@@ -145,11 +90,11 @@ int TestFileTwoFish_CBC(const char* type, int keySize){
     delete[] reference;
 
     std::cerr<<"START DECRYPT. FILE:   "<<name<<std::endl;
-    ci.addIv(iv,IV_SIZE);
+    sprintf(name, "%s""iv.txt", directory);
+    read_iv(name, ci);
+
     BYTE *decrypted = new BYTE[textSize];
-    if (ci.decrypt(ki, encrypted, textSize, decrypted) != textSize ){
-        return 1;
-    }
+    ci.decrypt(ki, encrypted, textSize, decrypted);
 
     delete[] encrypted;
     assert(not memcmp(plain, decrypted, textSize));
@@ -160,13 +105,11 @@ int TestFileTwoFish_CBC(const char* type, int keySize){
 }
 
 int main(){
-    if(TestFileTwoFish_CBC("CBC", 128)){
-
-    }
-    TestFileTwoFish_CBC("CBC", 192);
-    TestFileTwoFish_CBC("CBC", 256);
-    TestFileTwoFish("ECB", 128);
-    TestFileTwoFish("ECB", 192);
-    TestFileTwoFish("ECB", 256);
+    TestFileTwoFish<Twofish_CBC>("CBC", 128);
+    TestFileTwoFish<Twofish_CBC>("CBC", 192);
+    TestFileTwoFish<Twofish_CBC>("CBC", 256);
+    TestFileTwoFish<Twofish_ECB>("ECB", 128);
+    TestFileTwoFish<Twofish_ECB>("ECB", 192);
+    TestFileTwoFish<Twofish_ECB>("ECB", 256);
     return 0;
 }

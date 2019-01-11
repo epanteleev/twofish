@@ -144,11 +144,11 @@ private:
     static const int ROUNDS_256 = 16;	/* default number of rounds for 256-bit keys*/
 public:
     keyInstance() = default;
-    keyInstance(const DWORD *keyMaterial_,const int keyLen_);
+    keyInstance(const DWORD *keyMaterial_,const size_t keyLen_);
     inline size_t length()const noexcept {
 		return keyLen;
     }
-    void addKey(const DWORD *keyMaterial_,const int keyLen_);
+    void addKey(const DWORD *keyMaterial_,const size_t keyLen_);
     inline bool empty()const noexcept{
         return not keySig;
     }
@@ -191,21 +191,21 @@ public:
     virtual ~twofish() = default;
 
 public:
-    virtual int encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer) = 0;
-    virtual int decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer) = 0;
+    virtual  void encrypt(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer) = 0;
+    virtual  void decrypt(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer) = 0;
 };
 
 class Twofish_ECB final: public twofish{
 public:
-    int encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer)override;
-    int decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer)override;
+    void encrypt(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer)override;
+    void decrypt(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer)override;
 };
 
 class Twofish_CBC final : public twofish{
 public:
     void addIv(BYTE* Iv,size_t iv_length);
-    int encrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer)override;
-    int decrypt(keyInstance& key,const BYTE *input, size_t inputLen, BYTE *outBuffer)override;
+    void encrypt(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer)override;
+    void decrypt(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer)override;
 private:
     DWORD iv32[BLOCK_SIZE/32]{};
 };

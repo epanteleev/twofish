@@ -16,16 +16,16 @@ DWORD keyInstance::RS_MDS_Encode(DWORD k0,DWORD k1){
 
 bool keyInstance::reKey(){
     using namespace internal;
-    int		i,k64Cnt;
+    int		k64Cnt;
     size_t 	subkeyCnt = ROUND_SUBKEYS + 2 * NUM_ROUNDS;
     DWORD	A,B;
     DWORD	k32e[MAX_KEY_BITS/64],k32o[MAX_KEY_BITS/64]; /* even/odd key dwords */
 	if (subkeyCnt > TOTAL_SUBKEYS) {
-		bad_key_instance();
+        throw bad_key_instance();
 	}
 
     k64Cnt=(keyLen+63)/64;		/* round up to next multiple of 64 bits */
-    for (i=0;i<k64Cnt;i++){						/* split into even/odd key dwords */
+    for (size_t i=0;i<k64Cnt;i++){						/* split into even/odd key dwords */
         k32e[i] = key32[2*i  ];
         k32o[i] = key32[2*i+1];
         /* compute S-box keys using (12,8) Reed-Solomon code over GF(256) */
@@ -42,18 +42,18 @@ bool keyInstance::reKey(){
     return true;
 }
 
-keyInstance::keyInstance(const DWORD *keyMaterial_,const int keyLen_){
+keyInstance::keyInstance(const DWORD *keyMaterial_,const size_t keyLen_){
     addKey(keyMaterial_,keyLen_);
 }
-void keyInstance::addKey(const DWORD *keyMaterial_,const int keyLen_){
+void keyInstance::addKey(const DWORD *keyMaterial_,const size_t keyLen_){
     if (keyMaterial_ == nullptr) {
         throw bad_key_material();
     }
     keySig = true;
-    keyLen = keyLen_;
-    if ((keyLen_ > MAX_KEY_BITS) || (keyLen_ % 64) || (keyLen_ < MIN_KEY_BITS)) {
+    keyLen = keyLen_*32;
+    if ((keyLen > MAX_KEY_BITS) || (keyLen % 64) || (keyLen < MIN_KEY_BITS)) {
         throw bad_key_instance();
     }
-    memcpy(reinterpret_cast<void*>(key32), reinterpret_cast<const void*>(keyMaterial_),keyLen_/8);
+    memcpy(reinterpret_cast<void*>(key32), reinterpret_cast<const void*>(keyMaterial_),keyLen);
     reKey();			/* generate round subkeys */
 }

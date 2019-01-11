@@ -31,7 +31,7 @@ class TwofishTest_ECB : public TwofishTestBase<Twofish_ECB>{};
 TEST_F(TwofishTest_ECB,test1){
     std::string str = "qweqqweqqweqqweq";
     const DWORD a[4] = {0x1,0x1,0x1,0x1};
-    setKey(a,128);
+    setKey(a,4);
     BYTE arr[60] = {0}, res[60] = {0};
     encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
     decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
@@ -42,7 +42,7 @@ TEST_F(TwofishTest_ECB,test1){
 TEST_F(TwofishTest_ECB,test2){
     std::string str = "qweqqweqqweqqweqqweqqweqqweqqweq123123123123123";
     const DWORD a[4] = {0x1,0x2,0x2,0xff};
-    setKey(a,128);
+    setKey(a,4);
     BYTE arr[60] = {0}, res[60] = {0};
     encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
     decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
@@ -53,7 +53,7 @@ TEST_F(TwofishTest_ECB,test2){
 TEST_F(TwofishTest_ECB,test3){
     std::string str = "qweq";
     const DWORD a[4] = {0x1,0x2,0x2,0xff};
-    setKey(a,128);
+    setKey(a,4);
     BYTE arr[60] = {0}, res[60] = {0};
     encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
     decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
@@ -63,7 +63,7 @@ TEST_F(TwofishTest_ECB,test3){
 TEST_F(TwofishTest_ECB,test4){
     std::string str = "q";
     const DWORD a[4] = {0x1,0x2,0x2,0xff};
-    setKey(a,128);
+    setKey(a,4);
     BYTE arr[60] = {0}, res[60] = {0};
     encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
     decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
@@ -74,7 +74,7 @@ TEST_F(TwofishTest_ECB,test4){
 TEST_F(TwofishTest_ECB,test5){
     std::string str = "";
     const DWORD a[4] = {0x1,0x2,0x2,0xff};
-    setKey(a,128);
+    setKey(a,4);
     BYTE arr[60] = {0}, res[60] = {0};
     ASSERT_THROW(encrypt((const BYTE*)str.c_str(), str.size()*8, (unsigned char*)arr),bad_input_buffer);
 }
@@ -82,7 +82,7 @@ TEST_F(TwofishTest_ECB,test5){
 TEST_F(TwofishTest_ECB,test6){
     std::string str = "qqweqweqweqweqweqweqweqweqweweqweqweqweqweqweqweqweqw";
     const DWORD a[6] = {0x1,0x2,0x2,0xff,0xDF,0xFD};
-    setKey(a,192);
+    setKey(a,4);
     BYTE arr[60] = {0}, res[60] = {0};
     encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
     decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
@@ -101,9 +101,9 @@ protected:
 TEST_F(TwofishTest_CBC,test1){
     BYTE iv[16] = {0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4};
     std::string str = "qweqqweqqweqqweqqweqqweqqweqqweq123123123123123";
-    const DWORD a[4] = {0x1,0x2,0x2,0xff};
+    const DWORD a[6] = {0x1,0x2,0x2,0xff,0x2,0xff};
 
-    setKey(a,128);
+    setKey(a,6);
     iv_set(iv);
     BYTE arr[60] = {0}, res[60] = {0};
     encrypt((const BYTE*)str.c_str(), str.size(), arr);
@@ -116,9 +116,9 @@ TEST_F(TwofishTest_CBC,test1){
 TEST_F(TwofishTest_CBC,test2){
     BYTE iv[16] = {0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4};
     std::string str = "q";
-    const DWORD a[4] = {0x1,0x2,0x2,0xff};
+    const DWORD a[6] = {0x1,0x2,0x2,0xff,0x2,0xff};
 
-    setKey(a,128);
+    setKey(a,6);
     iv_set(iv);
     BYTE arr[60] = {0}, res[60] = {0};
     encrypt((const BYTE*)str.c_str(), str.size(), arr);
@@ -131,9 +131,9 @@ TEST_F(TwofishTest_CBC,test2){
 TEST_F(TwofishTest_CBC,test3){
     BYTE iv[16] = {0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4};
     std::string str = "qwerqwerqwerqwer";
-    const DWORD a[4] = {0x1,0x2,0x2,0xff};
+    const DWORD a[6] = {0x1,0x2,0x2,0xff};
 
-    setKey(a,128);
+    setKey(a,4);
     iv_set(iv);
     BYTE arr[60] = {0}, res[60] = {0};
     encrypt((const BYTE*)str.c_str(), str.size(), arr);

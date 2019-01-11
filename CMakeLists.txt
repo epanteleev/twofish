@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(twofish)
 
+set(CMAKE_CXX_STANDARD 17)
 #option(BUILD_SHARED_LIBS "build as shared library" ON)
 #option(BUILD_TEST ON)
 
@@ -25,5 +26,7 @@ add_library(${PROJECT_NAME} SHARED ${SRC} ${INCLUDE})
 add_executable(run main.cpp)
 target_link_libraries(run ${PROJECT_NAME} )
 add_test(FirstTest run)
+
+file(COPY tests/ DESTINATION test/)
 
 
