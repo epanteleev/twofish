@@ -71,7 +71,7 @@ inline DWORD	M32(DWORD x) { return Mul_Y(x); }
 inline DWORD	M33(DWORD x) { return Mul_X(x); }
 
 inline BYTE	_b(DWORD x, int N) {
-    return 	((BYTE *)(&x))[((N) & 3) ^ ADDR_XOR];/* pick bytes out of a dword */
+    return 	(reinterpret_cast<BYTE *>(&x))[(N & 3) ^ ADDR_XOR];/* pick bytes out of a dword */
 }
 
 inline BYTE b0(DWORD x) { return _b(x, 0); }
@@ -97,22 +97,25 @@ class bad_key_mat : public std::exception {
     const char* what() const noexcept{
         return "key material not of correct length";
     }
-};//BAD_KEY_INSTANCE
+};
+
 class bad_key_instance : public std::exception {
     const char* what() const noexcept{
         return "key passed is not valid";
     }
-};//BAD_IV_MAT
+};
+
 class bad_iv_mat : public std::exception {
     const char* what() const noexcept{
         return "key material not of correct length";
     }
-};//BAD_CIPHER_STATE
+};
+
 class bad_cipher_state : public std::exception {
     const char* what() const noexcept{
         return "cipher in wrong state (e.g., not initialized)";
     }
-};//BAD_INPUT_LEN
+};
 
 class bad_input_len : public std::exception {
     const char* what() const noexcept{
@@ -137,11 +140,7 @@ private:
 	static const DWORD	SK_BUMP = 0x01010101u;
 	static const DWORD	SK_ROTL = 9;
     static const int	MIN_KEY_BITS = 128;	/* min number of bits of key (zero pad) */
-
-
-    static const int ROUNDS = 16;	/* default number of rounds for 128-bit keys*/
-    static const int ROUNDS_192 = 16;	/* default number of rounds for 192-bit keys*/
-    static const int ROUNDS_256 = 16;	/* default number of rounds for 256-bit keys*/
+    static const int ROUNDS = 16;	/* default number of rounds*/
 public:
     keyInstance() = default;
     keyInstance(const DWORD *keyMaterial_,const size_t keyLen_);
@@ -184,7 +183,8 @@ int blockEncrypt(keyInstance& key,DWORD* x);
 
 int blockDecrypt(keyInstance& key, DWORD* x);
 
-
+///
+/// \brief The twofish class is base
 class twofish{
 public:
     twofish() = default;

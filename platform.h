@@ -5,7 +5,7 @@ namespace twofish {
 #ifdef  _WIN32 
 #include <Windows.h>
 #else
-	using BYTE = unsigned char;
+    using BYTE = unsigned char;
     using DWORD = unsigned int;
 #endif
 

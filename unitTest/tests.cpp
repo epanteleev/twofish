@@ -3,7 +3,7 @@
 #include <vector>
 #include <list>
 #include <string>
-
+#include <cstdlib>
 #include "gtest/gtest.h"
 #include "twofish.h"
 #include <string>
@@ -13,7 +13,7 @@ template<typename Twofish_mode>
 class TwofishTestBase : public ::testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void setKey(const DWORD *keyMaterial_,const int keyLen_){
+    virtual void setKey(const DWORD *keyMaterial_,const size_t keyLen_){
         key.addKey(keyMaterial_,keyLen_);
     }
     virtual void encrypt(const BYTE *input, size_t inputLen, BYTE *outBuffer){
@@ -33,99 +33,70 @@ TEST_F(TwofishTest_ECB,test1){
     const DWORD a[4] = {0x1,0x1,0x1,0x1};
     setKey(a,4);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
-    ASSERT_EQ(str,(const char*)res);
-    ASSERT_NE(str,(const char*)arr);
+    encrypt(reinterpret_cast<const BYTE*>(str.c_str()), str.length(), reinterpret_cast<BYTE*>(arr));
+    decrypt(reinterpret_cast<const BYTE*>(arr), str.length(), reinterpret_cast<BYTE*>(res));
+    ASSERT_EQ(str,reinterpret_cast<const char*>(res));
+    ASSERT_NE(str,reinterpret_cast<const char*>(arr));
 }
 
 TEST_F(TwofishTest_ECB,test2){
-    std::string str = "qweqqweqqweqqweqqweqqweqqweqqweq123123123123123";
-    const DWORD a[4] = {0x1,0x2,0x2,0xff};
+    std::string str = "qwerqwerqwerqwerqwerqwerqwerqwer";
+    const DWORD a[6] = {0x1,0x2,0x2,0xff,0xDF,0xFD};
     setKey(a,4);
-    BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
-    ASSERT_EQ(str,(const char*)res);
-    ASSERT_NE(str,(const char*)arr);
-}
-
-TEST_F(TwofishTest_ECB,test3){
-    std::string str = "qweq";
-    const DWORD a[4] = {0x1,0x2,0x2,0xff};
-    setKey(a,4);
-    BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
-    ASSERT_EQ(str,(const char*)res);
-    ASSERT_NE(str,(const char*)arr);
-}
-TEST_F(TwofishTest_ECB,test4){
-    std::string str = "q";
-    const DWORD a[4] = {0x1,0x2,0x2,0xff};
-    setKey(a,4);
-    BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
-    ASSERT_EQ(str,(const char*)res);
-    ASSERT_NE(str,(const char*)arr);
+    BYTE arr[60]{}, res[60]{};
+    encrypt(reinterpret_cast<const BYTE*>(str.c_str()), str.length(), reinterpret_cast<BYTE*>(arr));
+    decrypt(reinterpret_cast<const BYTE*>(arr), str.length(), reinterpret_cast<BYTE*>(res));
+    ASSERT_EQ(str,reinterpret_cast<const char*>(res));
+    ASSERT_NE(str,reinterpret_cast<const char*>(arr));
 }
 
 TEST_F(TwofishTest_ECB,test5){
     std::string str = "";
     const DWORD a[4] = {0x1,0x2,0x2,0xff};
     setKey(a,4);
-    BYTE arr[60] = {0}, res[60] = {0};
-    ASSERT_THROW(encrypt((const BYTE*)str.c_str(), str.size()*8, (unsigned char*)arr),bad_input_buffer);
-}
-
-TEST_F(TwofishTest_ECB,test6){
-    std::string str = "qqweqweqweqweqweqweqweqweqweweqweqweqweqweqweqweqweqw";
-    const DWORD a[6] = {0x1,0x2,0x2,0xff,0xDF,0xFD};
-    setKey(a,4);
-    BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size(), (unsigned char*)arr);
-    decrypt( (const BYTE*)arr, str.size(), (unsigned char*)res);
-    ASSERT_EQ(str,(const char*)res);
-    ASSERT_NE(str,(const char*)arr);
+    BYTE arr[60]{};
+    ASSERT_THROW(encrypt(reinterpret_cast<const BYTE*>(str.c_str()), str.size(),
+                         reinterpret_cast<unsigned char*>(arr)),bad_input_buffer);
 }
 
 
 class TwofishTest_CBC : public TwofishTestBase<Twofish_CBC>{
 protected:
-    virtual void iv_set(BYTE* iv){
+    void iv_set(BYTE* iv){
         ecb.addIv(iv,IV_SIZE);
     }
 };
 
 TEST_F(TwofishTest_CBC,test1){
     BYTE iv[16] = {0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4};
-    std::string str = "qweqqweqqweqqweqqweqqweqqweqqweq123123123123123";
+    std::string str = "qwerqwerqwerqwerqwerqwerqwerqwer";
     const DWORD a[6] = {0x1,0x2,0x2,0xff,0x2,0xff};
 
     setKey(a,6);
     iv_set(iv);
-    BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size(), arr);
+    BYTE arr[60]{}, res[60]{};
+    encrypt(reinterpret_cast<const BYTE*>(str.c_str()), str.length(), reinterpret_cast<BYTE*>(arr));
     iv_set(iv);
-    decrypt( (const BYTE*)arr, str.size(), res);
-    ASSERT_EQ(str,(const char*)res);
-    ASSERT_NE(str,(const char*)arr);
+
+    decrypt(reinterpret_cast<const BYTE*>(arr), str.length(), reinterpret_cast<BYTE*>(res));
+    ASSERT_EQ(str,reinterpret_cast<const char*>(res));
+    ASSERT_NE(str,reinterpret_cast<const char*>(arr));
 }
 
 TEST_F(TwofishTest_CBC,test2){
     BYTE iv[16] = {0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4,0x1,0x2,0x3,0x4};
-    std::string str = "q";
+    std::string str = "qwerqwerqwerqwer";
     const DWORD a[6] = {0x1,0x2,0x2,0xff,0x2,0xff};
 
     setKey(a,6);
     iv_set(iv);
-    BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size(), arr);
+    BYTE arr[60]{}, res[60]{};
+    encrypt(reinterpret_cast<const BYTE*>(str.c_str()), str.length(), reinterpret_cast<BYTE*>(arr));
     iv_set(iv);
-    decrypt( (const BYTE*)arr, str.size(), res);
-    ASSERT_EQ(str,(const char*)res);
-    ASSERT_NE(str,(const char*)arr);
+
+    decrypt(reinterpret_cast<const BYTE*>(arr), str.length(), reinterpret_cast<BYTE*>(res));
+    ASSERT_EQ(str,reinterpret_cast<const char*>(res));
+    ASSERT_NE(str,reinterpret_cast<const char*>(arr));
 }
 
 TEST_F(TwofishTest_CBC,test3){
@@ -136,11 +107,12 @@ TEST_F(TwofishTest_CBC,test3){
     setKey(a,4);
     iv_set(iv);
     BYTE arr[60] = {0}, res[60] = {0};
-    encrypt((const BYTE*)str.c_str(), str.size(), arr);
+    encrypt(reinterpret_cast<const BYTE*>(str.c_str()), str.length(), reinterpret_cast<BYTE*>(arr));
     iv_set(iv);
-    decrypt( (const BYTE*)arr, str.size(), res);
-    ASSERT_EQ(str,(const char*)res);
-    ASSERT_NE(str,(const char*)arr);
+
+    decrypt(reinterpret_cast<const BYTE*>(arr), str.length(), reinterpret_cast<BYTE*>(res));
+    ASSERT_EQ(str,reinterpret_cast<const char*>(res));
+    ASSERT_NE(str,reinterpret_cast<const char*>(arr));
 }
 
 int main(int argc, char *argv[]){

@@ -38,7 +38,7 @@ DWORD f32(DWORD x,const DWORD *k32,size_t keyLen){
 }
 
 void verfy(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer){
-    if(input == nullptr || input_length <= 0){
+    if(input == nullptr || input_length <= 0 || input_length % 16){
         throw bad_input_buffer();
     }
     if (key.empty()){
@@ -152,7 +152,7 @@ void Twofish_CBC::encrypt(keyInstance& key,const BYTE *input, size_t input_lengt
 void Twofish_CBC::decrypt(keyInstance& key,const BYTE *input, size_t input_length, BYTE *outBuffer){
     verfy(key,input,input_length,outBuffer);
     DWORD x[BLOCK_SIZE/32]{};			/* block being encrypted */
-    size_t inputLen = input_length* 8;
+    size_t inputLen = input_length * 8;
     for (size_t n = 0;n<inputLen;n+=BLOCK_SIZE,input+=BLOCK_SIZE/8,outBuffer+=BLOCK_SIZE/8){
         for (size_t i=0;i<BLOCK_SIZE/32;i++){	/* copy in the block, add whitening */
             x[i] = Bswap(reinterpret_cast<const DWORD *>(input)[i]) ^ key.subKey()[OUTPUT_WHITEN+i];
